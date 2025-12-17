@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -27,12 +28,18 @@ public class SecurityConfig {
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.authorizeHttpRequests( authorize -> authorize
+        return httpSecurity
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Mantém sessão ativa
+                )
+                .authorizeHttpRequests( authorize -> authorize
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/login").permitAll()
                 .requestMatchers("/managers").hasAnyRole("MANAGERS")
                 .requestMatchers("/users").hasAnyRole("USERS","MANAGERS")
                 .anyRequest().authenticated())
+                .formLogin(Customizer.withDefaults()) // Habilita a página de login padrão do spring (/login) (bom para usar em projetos de aprendizado e teste)
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
